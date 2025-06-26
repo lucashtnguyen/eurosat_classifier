@@ -1,0 +1,17 @@
+model:
+  name: baseline_cnn
+  hidden_units: 128
+  dropout: 0.3
+
+training:
+  batch_size: 64
+  learning_rate: 0.001
+  epochs: 10
+  seed: 42
+
+data:
+  root_dir: ./data/EuroSAT
+  train_split: 0.8
+
+output:
+  base_dir: ./outputs/
