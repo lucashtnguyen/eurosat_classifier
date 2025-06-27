@@ -1,5 +1,5 @@
 # EuroSAT Classifier
-[![CI](https://github.com/<user>/eurosat_classifier/actions/workflows/python-ci.yml/badge.svg)](https://github.com/<user>/eurosat_classifier/actions/workflows/python-ci.yml)
+[![CI](https://github.com/lucashtnguyen/eurosat_classifier/actions/workflows/python-ci.yml/badge.svg)](https://github.com/lucashtnguyen/eurosat_classifier/actions/workflows/python-ci.yml)
 
 Minimal pipeline for land cover classification using the EuroSAT dataset.
 
