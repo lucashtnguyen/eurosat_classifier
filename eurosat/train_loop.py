@@ -16,7 +16,9 @@ log_buffer: list[str] = []
 logger = logging.getLogger(__name__)
 
 
-def train_epoch(model: torch.nn.Module, data: Iterable, optimizer: torch.optim.Optimizer) -> float:
+def train_epoch(
+    model: torch.nn.Module, data: Iterable, optimizer: torch.optim.Optimizer
+) -> float:
     """Run a single training epoch.
 
     Parameters

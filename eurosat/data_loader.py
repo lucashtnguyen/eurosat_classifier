@@ -6,7 +6,11 @@ import logging
 from pathlib import Path
 from typing import Tuple
 
-from torch.utils.data import DataLoader, random_split
+import random
+
+import numpy as np
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
 DEBUG = True
@@ -21,7 +25,9 @@ logger = logging.getLogger(__name__)
 TRANSFORM = transforms.Compose([transforms.ToTensor()])
 
 
-def get_dataloaders(root: Path, train_split: float, batch_size: int) -> Tuple[DataLoader, DataLoader]:
+def get_dataloaders(
+    root: Path, train_split: float, batch_size: int, seed: int
+) -> Tuple[DataLoader, DataLoader]:
     """Return train and validation dataloaders.
 
     Parameters
@@ -32,6 +38,8 @@ def get_dataloaders(root: Path, train_split: float, batch_size: int) -> Tuple[Da
         Fraction of data used for training.
     batch_size : int
         Batch size for loaders.
+    seed : int
+        Random seed for deterministic split.
 
     Returns
     -------
@@ -40,10 +48,22 @@ def get_dataloaders(root: Path, train_split: float, batch_size: int) -> Tuple[Da
     """
     logger.debug("Preparing dataloaders from %s", root)
     log_buffer.append(f"DEBUG: Preparing dataloaders from {root}")
+    random.seed(seed)
+    np.random.seed(seed)
+    import torch
+
+    torch.manual_seed(seed)
     dataset = datasets.ImageFolder(root=root, transform=TRANSFORM)
-    train_size = int(len(dataset) * train_split)
-    val_size = len(dataset) - train_size
-    train_ds, val_ds = random_split(dataset, [train_size, val_size])
+    indices = list(range(len(dataset)))
+    if hasattr(dataset, "targets"):
+        labels = list(dataset.targets)
+    else:
+        labels = [s[1] for s in dataset.samples]
+    train_idx, val_idx = train_test_split(
+        indices, train_size=train_split, stratify=labels, random_state=seed
+    )
+    train_ds = Subset(dataset, train_idx)
+    val_ds = Subset(dataset, val_idx)
     return (
         DataLoader(train_ds, batch_size=batch_size, shuffle=True),
         DataLoader(val_ds, batch_size=batch_size, shuffle=False),
