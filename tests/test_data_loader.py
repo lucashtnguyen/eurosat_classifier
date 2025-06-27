@@ -13,52 +13,25 @@ def test_get_dataloaders_invalid_path(tmp_path: Path) -> None:
         get_dataloaders(tmp_path / "missing", 0.8, 1, 0)
 
 
-def test_get_dataloaders_placeholder(monkeypatch, tmp_path: Path) -> None:
-    """Happy path placeholder using fake dataset."""
-    from torch.utils.data import Dataset, DataLoader
-
-    class DummySet(Dataset):
-        def __init__(self) -> None:
-            self.targets = [0, 0, 1, 1]
-
-        def __len__(self) -> int:
-            return 4
-
-        def __getitem__(self, idx: int):
-            return (0, self.targets[idx])
-
-    def fake_imagefolder(root: Path, transform=None):
-        return DummySet()
-
-    monkeypatch.setattr("eurosat.data_loader.datasets.ImageFolder", fake_imagefolder)
-    train_dl, val_dl = get_dataloaders(tmp_path, 0.5, 1, 0)
-    assert isinstance(train_dl, DataLoader)
-    assert isinstance(val_dl, DataLoader)
+@pytest.mark.slow
+def test_get_dataloaders_real_dataset(eurosat_root: Path) -> None:
+    """Happy path: dataloaders created from real EuroSAT data."""
+    train_dl, val_dl = get_dataloaders(eurosat_root, 0.1, 2, 0)
+    assert len(train_dl.dataset) > 0
+    assert len(val_dl.dataset) > 0
 
 
-def test_get_dataloaders_stratified(monkeypatch, tmp_path: Path) -> None:
+@pytest.mark.slow
+def test_get_dataloaders_stratified(eurosat_root: Path) -> None:
     """Stratified split is deterministic and balanced."""
-    import torch
-    from torch.utils.data import Dataset
-
-    class Dummy(Dataset):
-        def __init__(self) -> None:
-            self.targets = [0, 0, 1, 1]
-
-        def __len__(self) -> int:
-            return 4
-
-        def __getitem__(self, idx: int):
-            return torch.zeros(1), self.targets[idx]
-
-    def fake_imagefolder(root: Path, transform=None):
-        return Dummy()
-
-    monkeypatch.setattr("eurosat.data_loader.datasets.ImageFolder", fake_imagefolder)
-    dl1_a, dl2_a = get_dataloaders(tmp_path, 0.5, 1, 42)
-    dl1_b, dl2_b = get_dataloaders(tmp_path, 0.5, 1, 42)
+    dl1_a, dl2_a = get_dataloaders(eurosat_root, 0.5, 2, 42)
+    dl1_b, dl2_b = get_dataloaders(eurosat_root, 0.5, 2, 42)
     assert dl1_a.dataset.indices == dl1_b.dataset.indices
-    labels1 = [dl1_a.dataset.dataset.targets[i] for i in dl1_a.dataset.indices]
-    labels2 = [dl2_a.dataset.dataset.targets[i] for i in dl2_a.dataset.indices]
-    assert sorted(labels1) == [0, 1]
-    assert sorted(labels2) == [0, 1]
+    train_labels = [dl1_a.dataset.dataset.targets[i] for i in dl1_a.dataset.indices]
+    val_labels = [dl2_a.dataset.dataset.targets[i] for i in dl2_a.dataset.indices]
+    from collections import Counter
+
+    train_counts = Counter(train_labels)
+    val_counts = Counter(val_labels)
+    assert len(set(train_counts.values())) == 1
+    assert len(set(val_counts.values())) == 1

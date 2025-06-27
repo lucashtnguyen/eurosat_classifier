@@ -7,15 +7,13 @@ from eurosat.model import build_model
 from eurosat.train_loop import train_epoch
 
 
-def test_train_epoch_runs() -> None:
-    """Happy path: single epoch runs."""
+@pytest.mark.slow
+def test_train_epoch_runs(eurosat_subset) -> None:
+    """Happy path: single epoch runs on real data subset."""
     model = build_model({})
-    data = [
-        (torch.randn(1, 3, 64, 64), torch.tensor([0])),
-        (torch.randn(1, 3, 64, 64), torch.tensor([1])),
-    ]
+    loader = torch.utils.data.DataLoader(eurosat_subset, batch_size=4, shuffle=False)
     optim = torch.optim.SGD(model.parameters(), lr=0.01)
-    loss = train_epoch(model, data, optim)
+    loss = train_epoch(model, loader, optim)
     assert loss >= 0.0
 
 

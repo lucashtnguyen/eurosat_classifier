@@ -14,6 +14,18 @@ pre-commit install
 pytest --cov=eurosat --cov-fail-under=0
 ```
 
+### EuroSAT dataset cache
+
+Tests marked with `@pytest.mark.slow` require the RGB version of the EuroSAT
+dataset. The data is cached under `.data/eurosat/` and will be downloaded
+automatically if missing.
+
+To fetch the dataset manually for offline work:
+
+```bash
+python -c "from torchvision.datasets import EuroSAT; EuroSAT(root='.data/eurosat', download=True)"
+```
+
 Train with:
 
 ```python
