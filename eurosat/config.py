@@ -17,6 +17,24 @@ log_buffer: list[str] = []
 logger = logging.getLogger(__name__)
 
 
+REQUIRED_SECTIONS = {"model", "training", "data", "output"}
+
+
+def _validate(cfg: Dict[str, Any]) -> None:
+    """Validate configuration dictionary.
+
+    Parameters
+    ----------
+    cfg : Dict[str, Any]
+        Parsed configuration dictionary.
+    """
+    for key in REQUIRED_SECTIONS:
+        if key not in cfg:
+            raise KeyError(f"Missing required section: {key}")
+        if not isinstance(cfg[key], dict):
+            raise TypeError(f"Section '{key}' must be a mapping")
+
+
 def load_config(path: Path) -> Dict[str, Any]:
     """Load YAML configuration file.
 
@@ -33,6 +51,7 @@ def load_config(path: Path) -> Dict[str, Any]:
     """
     logger.debug("Loading config from %s", path)
     log_buffer.append(f"DEBUG: Loading config from {path}")
-    # TODO: validate schema
     with path.open("r", encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        cfg = yaml.safe_load(fh)
+    _validate(cfg)
+    return cfg
