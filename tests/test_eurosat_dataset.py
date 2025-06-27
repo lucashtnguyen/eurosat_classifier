@@ -21,4 +21,3 @@ def test_subset_dataloader_shapes(eurosat_subset) -> None:
     assert images.shape == (4, 3, 64, 64)
     assert images.dtype == torch.float32
     assert labels.dtype == torch.int64
-
